@@ -1,0 +1,15 @@
+#! /bin/bash
+
+#
+# Print out all peers in a swarm given a swarm name
+#
+
+if [ -z "$1" ]; then
+	echo "Please provide a swarm name to list. Eg. 'com.canonical.DeePeer.Test'" 1>&2
+	exit 1
+fi
+
+SWARM_NAME="$1"
+SWARM_PATH="/com/canonical/dee/peer/$(echo $SWARM_NAME | sed -e 's@\.@/@g')"
+
+dbus-send --dest=$SWARM_NAME --type=method_call --print-reply $SWARM_PATH com.canonical.Dee.Peer.List

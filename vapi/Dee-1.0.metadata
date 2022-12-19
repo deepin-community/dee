@@ -1,0 +1,43 @@
+GListResultSet skip
+GListResultSetClass skip
+
+FilterModel
+	.filter unowned
+Model
+	.append skip=false
+	.build_named_row skip
+	.get skip=false
+	.get_row skip
+	.insert skip=false
+	.insert_before skip=false
+	.insert_sorted skip=false
+	.find_sorted skip=false
+	.prepend skip=false
+	.set skip=false
+	.set_schema skip=false
+	.set_column_names skip
+	.register_tag skip
+	.get_tag skip
+	.set_tag skip
+	.clear_tag skip
+
+SerializableParseFunc skip=false
+Serializable
+	.register_parser skip=false
+	.externalize skip // we need floating annotation here, see -custom
+
+SerializableModel
+	.get_seqnum virtual
+	.set_seqnum virtual
+	.inc_seqnum virtual
+
+SharedModelError errordomain
+	.shared_model_error_leader_invalidated name="LEADER_INVALIDATED"
+
+ICUError cheader_filename="dee-icu.h"
+
+// why does gir add these twice?
+filter_new skip
+resource_manager_get_default skip
+serializable_parse skip
+serializable_parse_external skip

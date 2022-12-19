@@ -1,0 +1,39 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
+export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
+
+%:
+	dh $@ --with python3,autoreconf
+
+override_dh_autoreconf:
+	NOCONFIGURE=1 dh_autoreconf ./autogen.sh
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-gtk-doc
+
+override_dh_auto_test:
+ifneq ($(DEB_HOST_ARCH),riscv64)
+	# on riscv the test leaves a dbus-test-runner which breaks build
+	# and waits until a a 24h timeout on the builder (LP: 1891158)
+	dh_auto_test
+endif
+
+override_dh_install:
+	PYTHON=python3 ./configure --prefix=/usr
+	cd bindings/python/ && DESTDIR=../../debian/tmp make install && cd ../..
+	dh_install -X.la -X.a -X.pyc -X.pyo
+
+override_dh_python3:
+	dh_python3 debian/gir1.2-dee-1.0/usr/lib/python3
+
+override_dh_gencontrol:
+	dh_girepository
+	dh_gencontrol

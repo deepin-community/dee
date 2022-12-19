@@ -1,0 +1,4 @@
+*.am
+examples/*.c
+examples/*.py
+examples/*.vala

@@ -1,0 +1,99 @@
+/*
+ * Copyright (C) 2012 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as 
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by
+ *              Michal Hruby <michal.hruby@canonical.com>
+ *
+ */
+
+#include "config.h"
+#include <glib.h>
+#include <glib-object.h>
+
+#include <gtx.h>
+#include <dee.h>
+
+static void
+row_added (DeeModel *model, DeeModelIter *iter, gpointer data)
+{
+  gint *num_added = (gint*) data;
+  (*num_added)++;
+}
+
+/* Expects a clone with 3 rows in it */
+gint
+main (gint argc, gchar *argv[])
+{
+  DeeModel     *model;
+  DeeModelIter *iter;
+  const gchar **column_names;
+  GVariant     *column_namesv;
+  GHashTable   *vardict_schema;
+  gint          num_added;
+  guint         column;
+  
+#if !GLIB_CHECK_VERSION(2, 35, 1)
+  g_type_init (); 
+#endif
+  g_set_prgname ("model-helper");
+
+  if (argc == 2)
+    model = dee_shared_model_new (argv[1]);
+  else
+    model = dee_shared_model_new_for_peer ((DeePeer*) dee_client_new (argv[1]));
+
+  num_added = 0;
+  g_signal_connect (model, "row-added", G_CALLBACK (row_added), &num_added);
+
+  if (gtx_wait_for_signal (G_OBJECT (model), 100000, "notify::synchronized", NULL))
+    g_error ("Helper model timed out waiting for 'ready' signal");
+
+  g_assert_cmpint (dee_model_get_n_rows (model), ==, 3);
+
+  iter = dee_model_get_iter_at_row (model, 0);
+  g_assert_cmpint (dee_model_get_int32 (model, iter, 0), == , 0);
+  g_assert_cmpstr (dee_model_get_string (model, iter, 1), == , "zero");
+
+  iter = dee_model_get_iter_at_row (model, 1);
+  g_assert_cmpint (dee_model_get_int32 (model, iter, 0), == , 1);
+  g_assert_cmpstr (dee_model_get_string (model, iter, 1), == , "one");
+
+  iter = dee_model_get_iter_at_row (model, 2);
+  g_assert_cmpint (dee_model_get_int32 (model, iter, 0), == , 2);
+  g_assert_cmpstr (dee_model_get_string (model, iter, 1), == , "two");
+
+  column_names = dee_model_get_column_names (model, NULL);
+  g_assert (column_names != NULL);
+
+  column_namesv = g_variant_new_strv (column_names, -1);
+  g_assert_cmpstr (g_variant_print (column_namesv, FALSE), ==,
+                   "['count', 'title', 'hints', 'extra-hints']");
+
+  g_assert_cmpstr (dee_model_get_field_schema (model, "uri", &column), ==, "s");
+  g_assert_cmpuint (column, ==, 2);
+
+  vardict_schema = dee_model_get_vardict_schema (model, 2);
+  g_assert_cmpuint (g_hash_table_size (vardict_schema), >, 0);
+  g_hash_table_unref (vardict_schema);
+
+  vardict_schema = dee_model_get_vardict_schema (model, 3);
+  g_assert (vardict_schema == NULL || g_hash_table_size (vardict_schema) == 0);
+  if (vardict_schema) g_hash_table_unref (vardict_schema);
+
+  gtx_assert_last_unref (model);
+  g_assert_cmpint (num_added, ==, 3);
+  
+  return 0;
+}

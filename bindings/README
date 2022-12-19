@@ -1,0 +1,10 @@
+Currently none of these bindings are installed or even properly working.
+
+Python
+------
+Currently not working because it's blocked on  https://bugzilla.gnome.org/show_bug.cgi?id=638915 "Array of GVariants passed as NULL"
+in pygobject.
+
+If you want to play around copy the Dee.py file into the gi.overrides module,
+fx. $prefix/lib/python2.7/site-packages/gi/overrides/ and you should be
+able to run the Python samples.

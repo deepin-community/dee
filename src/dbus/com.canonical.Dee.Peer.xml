@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<node>
+
+  <interface name="com.canonical.Dee.Peer">
+
+    <!-- Methods -->
+    <method name="List">
+      <arg name="peers" type="as" direction="out" />
+    </method>
+
+    <!-- Signals -->
+    <signal name="Ping">
+      <arg name="swarm_name" type="s" />
+    </signal>
+
+    <signal name="Pong">
+      <arg name="swarm_name" type="s" />
+    </signal>
+
+    <signal name="Bye">
+      <arg name="swarm_name" type="s" />
+      <arg name="peer_address" type="s" />
+    </signal>
+    
+  </interface>
+  
+</node>
